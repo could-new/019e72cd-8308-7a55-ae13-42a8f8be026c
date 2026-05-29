@@ -1,485 +1,448 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
 
 void main() {
-  runApp(const MultiAgentDesignerApp());
+  runApp(const BattleRoyaleApp());
 }
 
-class MultiAgentDesignerApp extends StatelessWidget {
-  const MultiAgentDesignerApp({super.key});
+class BattleRoyaleApp extends StatelessWidget {
+  const BattleRoyaleApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Multi-Agent System Designer',
+      title: 'Battle Royale Lobby',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(
-          seedColor: Colors.blueGrey,
-          brightness: Brightness.light,
+        colorScheme: const ColorScheme.dark(
+          primary: Colors.amber,
+          secondary: Colors.deepOrangeAccent,
+          background: Colors.black,
         ),
-        useMaterial3: true,
+        fontFamily: 'Roboto', // Defaulting to Roboto, but bolded everywhere for gaming feel
       ),
       initialRoute: '/',
       routes: {
-        '/': (context) => const DesignerScreen(),
+        '/': (context) => const LobbyScreen(),
       },
     );
   }
 }
 
-// --- Data Models ---
-
-class Agent {
-  final String id;
-  String name;
-  String role;
-  String inputs;
-  String outputs;
-  String decisionLogic;
-  Offset position;
-
-  Agent({
-    required this.id,
-    required this.name,
-    required this.role,
-    required this.inputs,
-    required this.outputs,
-    required this.decisionLogic,
-    this.position = const Offset(100, 100),
-  });
-}
-
-class FlowEdge {
-  final String id;
-  final String sourceId;
-  final String targetId;
-  String label;
-  bool isFeedback;
-
-  FlowEdge({
-    required this.id,
-    required this.sourceId,
-    required this.targetId,
-    this.label = '',
-    this.isFeedback = false,
-  });
-}
-
-class MultiAgentSystem {
-  String task;
-  String failureHandling;
-  String optimizationSteps;
-  String scalability;
-  List<Agent> agents;
-  List<FlowEdge> edges;
-
-  MultiAgentSystem({
-    this.task = 'Define Task...',
-    this.failureHandling = 'Describe failure handling...',
-    this.optimizationSteps = 'Describe optimization...',
-    this.scalability = 'Describe scalability...',
-    List<Agent>? agents,
-    List<FlowEdge>? edges,
-  })  : agents = agents ?? [],
-        edges = edges ?? [];
-}
-
-// --- Main Designer Screen ---
-
-class DesignerScreen extends StatefulWidget {
-  const DesignerScreen({super.key});
+class LobbyScreen extends StatefulWidget {
+  const LobbyScreen({super.key});
 
   @override
-  State<DesignerScreen> createState() => _DesignerScreenState();
+  State<LobbyScreen> createState() => _LobbyScreenState();
 }
 
-class _DesignerScreenState extends State<DesignerScreen> {
-  late MultiAgentSystem _system;
-  Agent? _selectedAgent;
-  bool _showSystemPanel = false;
-
-  @override
-  void initState() {
-    super.initState();
-    _initSampleData();
-  }
-
-  void _initSampleData() {
-    final agent1 = Agent(
-      id: 'a1',
-      name: 'Task Receiver',
-      role: 'Parses incoming requests',
-      inputs: 'Raw text',
-      outputs: 'Structured task JSON',
-      decisionLogic: 'If valid, route to Planner; else return error.',
-      position: const Offset(50, 150),
-    );
-    final agent2 = Agent(
-      id: 'a2',
-      name: 'Planner Agent',
-      role: 'Breaks down tasks into steps',
-      inputs: 'Structured task JSON',
-      outputs: 'Sub-task list',
-      decisionLogic: 'Divide based on capability registry.',
-      position: const Offset(300, 100),
-    );
-    final agent3 = Agent(
-      id: 'a3',
-      name: 'Executor Agent',
-      role: 'Performs specific actions',
-      inputs: 'Sub-task',
-      outputs: 'Result data',
-      decisionLogic: 'Execute tool, retry 3 times on failure.',
-      position: const Offset(550, 200),
-    );
-    
-    final edge1 = FlowEdge(id: 'e1', sourceId: 'a1', targetId: 'a2', label: 'Route valid task');
-    final edge2 = FlowEdge(id: 'e2', sourceId: 'a2', targetId: 'a3', label: 'Assign sub-task');
-    final edge3 = FlowEdge(id: 'e3', sourceId: 'a3', targetId: 'a2', label: 'Report failure', isFeedback: true);
-
-    _system = MultiAgentSystem(
-      task: 'Process user natural language requests and execute tool actions.',
-      failureHandling: 'Retry transient errors up to 3 times. Fallback to human in the loop for persistent errors.',
-      optimizationSteps: 'Cache frequent requests. Batch tool calls where possible.',
-      scalability: 'Deploy stateless agent instances behind load balancer.',
-      agents: [agent1, agent2, agent3],
-      edges: [edge1, edge2, edge3],
-    );
-  }
-
-  void _addAgent() {
-    setState(() {
-      final newId = 'a${DateTime.now().millisecondsSinceEpoch}';
-      _system.agents.add(Agent(
-        id: newId,
-        name: 'New Agent',
-        role: 'Define role...',
-        inputs: 'Define inputs...',
-        outputs: 'Define outputs...',
-        decisionLogic: 'Define logic...',
-        position: const Offset(100, 100),
-      ));
-    });
-  }
-
+class _LobbyScreenState extends State<LobbyScreen> {
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+    final isMobile = size.width < 800;
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Multi-Agent AI Designer'),
-        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.add_circle_outline),
-            tooltip: 'Add Agent',
-            onPressed: _addAgent,
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          // Background representing the 3D lobby hangar
+          Positioned.fill(
+            child: Image.network(
+              'https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=2070&auto=format&fit=crop',
+              fit: BoxFit.cover,
+              color: Colors.black.withOpacity(0.5),
+              colorBlendMode: BlendMode.darken,
+            ),
           ),
-          IconButton(
-            icon: const Icon(Icons.settings),
-            tooltip: 'System Settings',
-            onPressed: () {
-              setState(() {
-                _showSystemPanel = !_showSystemPanel;
-                if (_showSystemPanel) _selectedAgent = null;
-              });
-            },
+          
+          // Character Placeholder (Center)
+          Center(
+            child: Container(
+              width: 300,
+              height: 500,
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  colors: [Colors.amber.withOpacity(0.2), Colors.transparent],
+                  radius: 0.8,
+                ),
+              ),
+              child: const Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.person_outline, size: 200, color: Colors.white70),
+                  SizedBox(height: 20),
+                  Text(
+                    "PLAYER CHARACTER",
+                    style: TextStyle(
+                      color: Colors.white54,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 2,
+                    ),
+                  )
+                ],
+              ),
+            ),
+          ),
+
+          // SafeArea for UI Elements
+          SafeArea(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // TOP BAR
+                _buildTopBar(isMobile),
+                
+                // MIDDLE SECTION (Left and Right panels)
+                Expanded(
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      // LEFT MENU
+                      _buildLeftMenu(isMobile),
+                      
+                      // RIGHT MENU
+                      _buildRightMenu(isMobile),
+                    ],
+                  ),
+                ),
+                
+                // BOTTOM BAR (Mode, Start)
+                _buildBottomBar(isMobile),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopBar(bool isMobile) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.black.withOpacity(0.8), Colors.transparent],
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          // Profile & Level
+          Row(
+            children: [
+              Container(
+                width: 50,
+                height: 50,
+                decoration: BoxDecoration(
+                  border: Border.all(color: Colors.amber, width: 2),
+                  shape: BoxShape.circle,
+                  image: const DecorationImage(
+                    image: NetworkImage('https://images.unsplash.com/photo-1566577739112-5180d4bf9390?q=80&w=200&auto=format&fit=crop'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    "SURVIVOR_99",
+                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 16),
+                  ),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.shade800,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                    child: const Text(
+                      "Lv. 42",
+                      style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                    ),
+                  )
+                ],
+              )
+            ],
+          ),
+          
+          if (!isMobile) ...[
+            // Currencies
+            Row(
+              children: [
+                _buildCurrency(Icons.monetization_on, Colors.yellow, "12,450"),
+                const SizedBox(width: 16),
+                _buildCurrency(Icons.diamond, Colors.lightBlueAccent, "340"),
+              ],
+            ),
+          ],
+
+          // Settings & Mail
+          Row(
+            children: [
+              if (isMobile) _buildCurrency(Icons.diamond, Colors.lightBlueAccent, "340", compact: true),
+              const SizedBox(width: 8),
+              IconButton(
+                icon: const Icon(Icons.mail, color: Colors.white),
+                onPressed: () {},
+              ),
+              IconButton(
+                icon: const Icon(Icons.settings, color: Colors.white),
+                onPressed: () {},
+              ),
+            ],
           )
         ],
       ),
-      body: LayoutBuilder(
-        builder: (context, constraints) {
-          bool isDesktop = constraints.maxWidth > 800;
+    );
+  }
 
-          Widget canvas = FlowCanvas(
-            system: _system,
-            selectedAgentId: _selectedAgent?.id,
-            onAgentSelected: (agent) {
-              setState(() {
-                _selectedAgent = agent;
-                _showSystemPanel = false;
-              });
-            },
-            onAgentMoved: (agent, delta) {
-              setState(() {
-                agent.position += delta;
-              });
-            },
-          );
-
-          if (isDesktop) {
-            return Row(
-              children: [
-                Expanded(child: canvas),
-                if (_showSystemPanel || _selectedAgent != null)
-                  Container(
-                    width: 350,
-                    decoration: BoxDecoration(
-                      border: Border(left: BorderSide(color: Colors.grey.shade300)),
-                      color: Theme.of(context).colorScheme.surface,
-                    ),
-                    child: _showSystemPanel
-                        ? SystemPanel(system: _system, onChanged: () => setState(() {}))
-                        : AgentPanel(agent: _selectedAgent!, onChanged: () => setState(() {})),
-                  )
-              ],
-            );
-          } else {
-            // Mobile layout
-            return Stack(
-              children: [
-                canvas,
-                if (_showSystemPanel || _selectedAgent != null)
-                  Positioned(
-                    bottom: 0, left: 0, right: 0,
-                    child: Container(
-                      height: constraints.maxHeight * 0.6,
-                      decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.surface,
-                        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-                        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10)],
-                      ),
-                      child: Column(
-                        children: [
-                          Align(
-                            alignment: Alignment.topRight,
-                            child: IconButton(
-                              icon: const Icon(Icons.close),
-                              onPressed: () {
-                                setState(() {
-                                  _showSystemPanel = false;
-                                  _selectedAgent = null;
-                                });
-                              },
-                            ),
-                          ),
-                          Expanded(
-                            child: _showSystemPanel
-                                ? SystemPanel(system: _system, onChanged: () => setState(() {}))
-                                : AgentPanel(agent: _selectedAgent!, onChanged: () => setState(() {})),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            );
-          }
-        },
+  Widget _buildCurrency(IconData icon, Color iconColor, String amount, {bool compact = false}) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.black54,
+        border: Border.all(color: Colors.white24),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, color: iconColor, size: 20),
+          if (!compact) const SizedBox(width: 6),
+          if (!compact) Text(amount, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          const SizedBox(width: 4),
+          const Icon(Icons.add_circle, color: Colors.amber, size: 16),
+        ],
       ),
     );
   }
-}
 
-// --- Flow Canvas ---
+  Widget _buildLeftMenu(bool isMobile) {
+    return Container(
+      width: isMobile ? 70 : 120,
+      padding: const EdgeInsets.only(left: 8.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          _buildSideButton(Icons.store, "STORE", isMobile),
+          _buildSideButton(Icons.casino, "LUCK ROYALE", isMobile),
+          _buildSideButton(Icons.person, "CHARACTER", isMobile),
+          _buildSideButton(Icons.shield, "VAULT", isMobile),
+          _buildSideButton(Icons.pets, "PET", isMobile),
+          _buildSideButton(Icons.colorize, "WEAPON", isMobile),
+        ],
+      ),
+    );
+  }
 
-class FlowCanvas extends StatelessWidget {
-  final MultiAgentSystem system;
-  final String? selectedAgentId;
-  final Function(Agent) onAgentSelected;
-  final Function(Agent, Offset) onAgentMoved;
-
-  const FlowCanvas({
-    super.key,
-    required this.system,
-    this.selectedAgentId,
-    required this.onAgentSelected,
-    required this.onAgentMoved,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        // Deselect logic handled by parent if needed, simplified here.
-      },
-      child: Container(
-        color: Colors.grey.shade100,
-        child: CustomPaint(
-          painter: FlowPainter(system: system),
-          child: Stack(
-            children: system.agents.map((agent) {
-              bool isSelected = agent.id == selectedAgentId;
-              return Positioned(
-                left: agent.position.dx,
-                top: agent.position.dy,
-                child: GestureDetector(
-                  onPanUpdate: (details) {
-                    onAgentMoved(agent, details.delta);
-                  },
-                  onTap: () => onAgentSelected(agent),
-                  child: Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: isSelected ? Colors.blue.shade100 : Colors.white,
-                      border: Border.all(
-                        color: isSelected ? Colors.blue : Colors.grey.shade400,
-                        width: 2,
-                      ),
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: const [BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(2, 2))],
-                    ),
-                    width: 140,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(Icons.smart_toy, size: 24, color: Colors.blueGrey),
-                        const SizedBox(height: 8),
-                        Text(
-                          agent.name,
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12),
-                        ),
-                      ],
-                    ),
+  Widget _buildRightMenu(bool isMobile) {
+    return Container(
+      width: isMobile ? 70 : 200,
+      padding: const EdgeInsets.only(right: 8.0),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          const SizedBox(height: 20),
+          _buildRightPanelItem(Icons.calendar_today, "EVENTS", isMobile),
+          _buildRightPanelItem(Icons.task, "MISSIONS", isMobile),
+          const Spacer(),
+          if (!isMobile)
+            Container(
+              height: 200,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: Colors.black45,
+                border: Border.all(color: Colors.white24),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                children: [
+                  Container(
+                    width: double.infinity,
+                    color: Colors.white10,
+                    padding: const EdgeInsets.all(8),
+                    child: const Text("FRIENDS", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                   ),
-                ),
-              );
-            }).toList(),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: 3,
+                      itemBuilder: (context, index) {
+                        return ListTile(
+                          leading: const CircleAvatar(radius: 12, backgroundColor: Colors.grey),
+                          title: Text("Friend_${index + 1}", style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                          trailing: const Icon(Icons.circle, color: Colors.green, size: 10),
+                        );
+                      },
+                    ),
+                  )
+                ],
+              ),
+            ),
+          const SizedBox(height: 20),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSideButton(IconData icon, String label, bool isMobile) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.black54,
+          border: Border(left: BorderSide(color: Colors.amber.shade700, width: 3)),
+        ),
+        child: InkWell(
+          onTap: () {},
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: isMobile ? MainAxisAlignment.center : MainAxisAlignment.start,
+              children: [
+                Icon(icon, color: Colors.white, size: 24),
+                if (!isMobile) const SizedBox(width: 10),
+                if (!isMobile)
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 12,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  )
+              ],
+            ),
           ),
         ),
       ),
     );
   }
-}
 
-class FlowPainter extends CustomPainter {
-  final MultiAgentSystem system;
-
-  FlowPainter({required this.system});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.grey.shade600
-      ..strokeWidth = 2.0
-      ..style = PaintingStyle.stroke;
-
-    final feedbackPaint = Paint()
-      ..color = Colors.orange
-      ..strokeWidth = 2.0
-      ..style = PaintingStyle.stroke;
-
-    const double nodeWidth = 140;
-    const double nodeHeight = 80; // approximate
-
-    for (var edge in system.edges) {
-      final source = system.agents.where((a) => a.id == edge.sourceId).firstOrNull;
-      final target = system.agents.where((a) => a.id == edge.targetId).firstOrNull;
-
-      if (source != null && target != null) {
-        final start = Offset(source.position.dx + nodeWidth / 2, source.position.dy + nodeHeight / 2);
-        final end = Offset(target.position.dx + nodeWidth / 2, target.position.dy + nodeHeight / 2);
-
-        final activePaint = edge.isFeedback ? feedbackPaint : paint;
-        
-        // Draw line
-        if (edge.isFeedback) {
-           final controlPoint = Offset((start.dx + end.dx) / 2, start.dy - 100);
-           final path = Path()..moveTo(start.dx, start.dy)..quadraticBezierTo(controlPoint.dx, controlPoint.dy, end.dx, end.dy);
-           canvas.drawPath(path, activePaint);
-        } else {
-           canvas.drawLine(start, end, activePaint);
-        }
-
-        // Draw arrow head (simplified)
-        final direction = (end - start).direction;
-        final arrowPoint = edge.isFeedback ? end : Offset(
-          end.dx - cos(direction) * (nodeWidth/2 + 10),
-          end.dy - sin(direction) * (nodeHeight/2 + 10)
-        );
-        
-        final path = Path()
-          ..moveTo(arrowPoint.dx, arrowPoint.dy)
-          ..lineTo(arrowPoint.dx - 10 * cos(direction - pi / 6), arrowPoint.dy - 10 * sin(direction - pi / 6))
-          ..lineTo(arrowPoint.dx - 10 * cos(direction + pi / 6), arrowPoint.dy - 10 * sin(direction + pi / 6))
-          ..close();
-        
-        canvas.drawPath(path, Paint()..color = edge.isFeedback ? Colors.orange : Colors.grey.shade600);
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}
-
-// --- Side Panels ---
-
-class AgentPanel extends StatelessWidget {
-  final Agent agent;
-  final VoidCallback onChanged;
-
-  const AgentPanel({super.key, required this.agent, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildRightPanelItem(IconData icon, String label, bool isMobile) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: ListView(
-        children: [
-          Text('Agent Details', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 16),
-          _buildTextField('Name', agent.name, (val) { agent.name = val; onChanged(); }),
-          _buildTextField('Role', agent.role, (val) { agent.role = val; onChanged(); }),
-          _buildTextField('Inputs', agent.inputs, (val) { agent.inputs = val; onChanged(); }),
-          _buildTextField('Outputs', agent.outputs, (val) { agent.outputs = val; onChanged(); }),
-          _buildTextField('Decision Logic', agent.decisionLogic, (val) { agent.decisionLogic = val; onChanged(); }, maxLines: 3),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTextField(String label, String initialValue, Function(String) onChanged, {int maxLines = 1}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: TextFormField(
-        initialValue: initialValue,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
+      padding: const EdgeInsets.symmetric(vertical: 6.0),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.black54,
+          borderRadius: const BorderRadius.only(topLeft: Radius.circular(20), bottomLeft: Radius.circular(20)),
+          border: Border.all(color: Colors.white24),
         ),
-        maxLines: maxLines,
-        onChanged: onChanged,
-      ),
-    );
-  }
-}
-
-class SystemPanel extends StatelessWidget {
-  final MultiAgentSystem system;
-  final VoidCallback onChanged;
-
-  const SystemPanel({super.key, required this.system, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: ListView(
-        children: [
-          Text('System Properties', style: Theme.of(context).textTheme.titleLarge),
-          const SizedBox(height: 16),
-          _buildTextField('Task', system.task, (val) { system.task = val; onChanged(); }, maxLines: 2),
-          _buildTextField('Failure Handling', system.failureHandling, (val) { system.failureHandling = val; onChanged(); }, maxLines: 2),
-          _buildTextField('Optimization Steps', system.optimizationSteps, (val) { system.optimizationSteps = val; onChanged(); }, maxLines: 2),
-          _buildTextField('Scalability', system.scalability, (val) { system.scalability = val; onChanged(); }, maxLines: 2),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTextField(String label, String initialValue, Function(String) onChanged, {int maxLines = 1}) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
-      child: TextFormField(
-        initialValue: initialValue,
-        decoration: InputDecoration(
-          labelText: label,
-          border: const OutlineInputBorder(),
+        child: InkWell(
+          onTap: () {},
+          child: Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Row(
+              mainAxisAlignment: isMobile ? MainAxisAlignment.center : MainAxisAlignment.start,
+              children: [
+                Icon(icon, color: Colors.amber, size: 20),
+                if (!isMobile) const SizedBox(width: 10),
+                if (!isMobile)
+                  Text(
+                    label,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 12,
+                    ),
+                  )
+              ],
+            ),
+          ),
         ),
-        maxLines: maxLines,
-        onChanged: onChanged,
+      ),
+    );
+  }
+
+  Widget _buildBottomBar(bool isMobile) {
+    return Container(
+      padding: const EdgeInsets.all(16.0),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.bottomCenter,
+          end: Alignment.topCenter,
+          colors: [Colors.black.withOpacity(0.9), Colors.transparent],
+        ),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.end,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          // Mode Selector
+          Expanded(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                  decoration: BoxDecoration(
+                    color: Colors.black87,
+                    border: Border.all(color: Colors.amber),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text("BATTLE ROYALE", style: TextStyle(color: Colors.amber, fontWeight: FontWeight.w900, fontSize: 16)),
+                      Text("Bermuda - Ranked", style: TextStyle(color: Colors.white70, fontSize: 12)),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 10),
+                // Team Mode
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.black87,
+                    border: Border.all(color: Colors.white24),
+                    borderRadius: BorderRadius.circular(4),
+                  ),
+                  child: const Icon(Icons.group, color: Colors.white),
+                )
+              ],
+            ),
+          ),
+          
+          // START BUTTON
+          InkWell(
+            onTap: () {},
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: isMobile ? 30 : 60, vertical: 20),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Colors.amber, Colors.orange],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(4),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.orange.withOpacity(0.5),
+                    blurRadius: 15,
+                    spreadRadius: 2,
+                  )
+                ],
+              ),
+              child: const Text(
+                "START",
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 28,
+                  fontWeight: FontWeight.w900,
+                  letterSpacing: 2,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ),
+          )
+        ],
       ),
     );
   }
